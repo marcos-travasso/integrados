@@ -1,19 +1,19 @@
 import asyncio
-import uuid
+import random
 from datetime import datetime, timezone
 
 from aiohttp import web
 from aiohttp.abc import Request
 
-from worker.database import Database
-from worker.rabbit import RabbitMQClient
+from server.database import Database
+from server.rabbit import RabbitMQClient
 
 rabbitmq = RabbitMQClient()
 database = Database()
 
 
 async def create_rebuild(request: Request):
-    id = str(uuid.uuid4())
+    id = f"image_{random.randint(1, 1000)}"
     received_at = datetime.now(timezone.utc).isoformat()
     data = await request.json()
 
