@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:14-alpine3.16
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+    container_name: postgres-integrados
+
+  rabbitmq:
+    image: rabbitmq:3.12.12-management-alpine
+    restart: always
+    container_name: rabbitmq-integrados
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+networks:
+  default:
+    driver: bridge
