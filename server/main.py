@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 from datetime import datetime, timezone
 
@@ -19,11 +20,12 @@ async def create_rebuild(request: Request):
 
     message = {
         "id": id,
+        "status": "pending",
         "received_at": received_at,
         "payload": data
     }
 
-    await database.insert_rebuild(id, received_at, data)
+    await database.insert_rebuild(id, "pending", received_at, data)
 
     asyncio.create_task(rabbitmq.send_to_queue(message))
 
@@ -31,7 +33,13 @@ async def create_rebuild(request: Request):
 
 
 async def get_rebuild(request: Request):
-    return web.Response(text="Hello, world")
+    rebuild_id = request.match_info["id"]
+    row = await database.get_rebuild(rebuild_id)
+
+    if row:
+        return web.json_response(data={"id": row["id"], "status": row["status"], "received_at": row["received_at"], "payload": json.loads(row["payload"])})
+    else:
+        return web.json_response(data={"error": "Not found"}, status=404)
 
 
 async def get_status(request: Request):
