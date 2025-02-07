@@ -29,7 +29,7 @@ async def create_rebuild(request: Request):
 
     asyncio.create_task(rabbitmq.send_to_queue(message))
 
-    return web.json_response(data={"id": id, "received_at": received_at})
+    return web.json_response(data={"id": id, "status": "pending", "received_at": received_at})
 
 
 async def get_rebuild(request: Request):
