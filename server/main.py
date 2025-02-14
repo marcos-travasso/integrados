@@ -62,8 +62,8 @@ async def get_status(request: Request):
 
     return web.json_response({
         "cpu_percent": f"{psutil.cpu_percent():.2f}",
-        "memory_used": used_mb,
-        "memory_total": total_mb
+        "memory_used": float(f"{used_mb:.2f}"),
+        "memory_total": float(f"{total_mb:.2f}")
     })
 
 

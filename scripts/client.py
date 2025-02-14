@@ -26,15 +26,21 @@ def send_signal(h, g, dimension):
     if response.status_code != 200:
         print("Error processing image.")
 
-    monitor_performance(response, data)
     while get_rebuild(response.json()['id'])['status'] != "finished":
         print('=============')
+        result = {
+            **get_rebuild(response.json()['id']),
+            **data,
+            **monitor_performance(response, data),
+        }
+        del result['g']
+        data_user.append(result)
         sleep(1)
-        monitor_performance(response, data)
     print('=============')
     result = {
         **get_rebuild(response.json()['id']),
-        **data
+        **data,
+        **monitor_performance(response, data),
     }
     del result['g']
     data_user.append(result)
@@ -48,77 +54,22 @@ def monitor_performance( response_rebuild, data_full):
         print(f"Memory usage: {status['memory_used']} MB ({(status['memory_used'] / status['memory_total']) * 100:.2f}%)")
         print(f"Total memory: {status['memory_total']} MB")
         data = {
+            **response.json(),
             "id": rebuild['id'],
-            "cpu_percent": status['cpu_percent'],
+            "cpu_percent": f"{status['cpu_percent']}",
             "memory_used": status['memory_used'],
             "memory_total": status['memory_total'],
             "model": data_full['model'],
-            "dimensions": data_full['dimensions']
+            "dimensions": data_full['dimensions'],
         }
-        data_user.append(data)
     else:
         print("Error getting server status.")
+    return data
 
 def get_rebuild(image_id):
     response = requests.get(f'http://localhost:8080/rebuild/{image_id}')
     return response.json()
 
-# def generate_pdf(image_paths, output_pdf):
-#     """Gera um PDF com várias imagens e seus dados correspondentes"""
-    
-#     c = canvas.Canvas(output_pdf, pagesize=letter)
-#     width, height = letter  # Tamanho da página
-
-#     for image_path in image_paths:
-#         # Gerando um número aleatório e criando o ID do usuário
-#         numero_aleatorio = random.randint(1, 100)
-#         user = f"user_{numero_aleatorio}"
-
-#         # Obtendo os dados do servidor
-#         status = monitor_performance()
-#         if status:
-#             user_data = {
-#                 "id": user,
-#                 "cpu_percent": status['cpu_percent'],
-#                 "memory_used": status['memory_used'],
-#                 "memory_total": status['memory_total']
-#             }
-#         else:
-#             user_data = {
-#                 "id": user,
-#                 "cpu_percent": "N/A",
-#                 "memory_used": "N/A",
-#                 "memory_total": "N/A"
-#             }
-
-#         # Adicionando imagem ao PDF
-#         img = ImageReader(image_path)
-#         img_width, img_height = img.getSize()
-#         aspect = img_height / img_width  # Mantendo proporção
-        
-#         max_width = width - 100
-#         max_height = height - 200  # Reservando espaço para texto
-        
-#         if img_width > max_width or img_height > max_height:
-#             img_width = max_width
-#             img_height = max_width * aspect
-        
-#         c.drawImage(img, 50, height - img_height - 50, width=img_width, height=img_height)
-
-#         # Adicionando texto abaixo da imagem
-#         text_y_position = height - img_height - 70
-#         c.setFont("Helvetica", 12)
-#         c.drawString(50, text_y_position, f"ID: {user_data['id']}")
-#         c.drawString(50, text_y_position - 20, f"CPU Uso: {user_data['cpu_percent']}%")
-#         c.drawString(50, text_y_position - 40, f"Memória Usada: {user_data['memory_used']} MB")
-#         c.drawString(50, text_y_position - 60, f"Memória Total: {user_data['memory_total']} MB")
-
-#         # Adicionando uma nova página se houver mais imagens
-#         c.showPage()
-
-#     # Salvando o PDF
-#     c.save()
-#     print(f"PDF '{output_pdf}' criado com sucesso!")
 
 def generate_pdf(data_user, output_pdf):
     """Gera um PDF com imagens e seus dados correspondentes"""
@@ -127,7 +78,7 @@ def generate_pdf(data_user, output_pdf):
     width, height = letter  # Tamanho da página
 
     for user in data_user:
-        image_path = f"gatinho.jpg"  # Supondo que as imagens estejam nesse formato
+        image_path = f"imagem.jpg"
         if "file_path" in user:
             image_path = user["file_path"]
 
@@ -146,9 +97,8 @@ def generate_pdf(data_user, output_pdf):
             
             c.drawImage(img, 50, height - img_height - 50, width=img_width, height=img_height)
         except Exception as e:
-            print(f"Erro ao carregar imagem {image_path}: {e}")
             c.setFont("Helvetica-Bold", 12)
-            c.drawString(50, height - 100, f"Imagem não encontrada: {image_path}")
+            c.drawString(50, height - 100, f"Imagem não reconstruída")
 
         # Adicionando os dados abaixo da imagem
         text_y_position = height - img_height - 70
