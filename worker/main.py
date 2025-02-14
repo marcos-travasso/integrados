@@ -1,32 +1,37 @@
 import asyncio
+import json
+from datetime import datetime
 
 import aio_pika
 import psutil
 
+from worker.rebuild import algorithm
+
 QUEUE_NAME = "rebuilds"
-MIN_FREE_MEMORY_MB = 17000
+MIN_FREE_MEMORY_MB = 15000
 
 
 def check_memory():
     available_mb = psutil.virtual_memory().available / (1024 * 1024)
     total_mb = psutil.virtual_memory().total / (1024 * 1024)
-    print(f"Free memory: {available_mb} MB. Total memory: {total_mb} MB ({(available_mb/total_mb)*100:.2f}%)")
+    print(f"Free memory: {available_mb} MB. Total memory: {total_mb} MB ({(available_mb / total_mb) * 100:.2f}%)")
     return available_mb > MIN_FREE_MEMORY_MB
 
 
-def process(message_body):
-    print(f"Processing message: {message_body}")
-    b = []
-    for i in range(100000):
-        a = []
-        for j in range(100000):
-            a.append(j)
-        b.append(a)
-    print("Processed")
+def process(message_body: str):
+    message_body = json.loads(message_body)
+    payload = message_body["payload"]
+    print(f"Processing message: {message_body['id']} | model {payload['model']} | dimension {payload['dimension']}")
+
+    started_at = datetime.now()
+
+    file_path = algorithm(payload["g"], payload["H"], payload["model"], message_body["id"], payload["dimension"])
+
+    print(f"Message processed: {message_body['id']} in {datetime.now() - started_at} -> {file_path}")
 
 
 async def handle_message(message: aio_pika.IncomingMessage):
-    while not check_memory():
+    while not check_memory():  # todo controlar qnt de paralelos
         print("Waiting for memory...")
         await asyncio.sleep(1)
 
@@ -47,7 +52,7 @@ async def consume():
 
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
-                asyncio.create_task(handle_message(message))  # Non-blocking execution
+                asyncio.create_task(handle_message(message))
 
 
 if __name__ == "__main__":
