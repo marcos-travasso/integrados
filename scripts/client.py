@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def send_signal(h, g, dimension):
     data_user = []
-    rand_number = random.randint(1, 100)
+    rand_number = random.randint(1, 1000)
     user = f"user_{rand_number}"
 
     data = {
@@ -156,13 +156,13 @@ def process_signal():
 
     data_user = send_signal(h, data[g], dimension)
 
-    output_pdf = f"relatorio_user_{data_user[0]['user']}.pdf"
+    output_pdf = f"./Reports/relatorio_user_{data_user[0]['user']}.pdf"
     generate_pdf(data_user, output_pdf)
 
 
 def main():
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(process_signal) for _ in range(2)]
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        futures = [executor.submit(process_signal) for _ in range(20)]
         for future in as_completed(futures):
             future.result()
 

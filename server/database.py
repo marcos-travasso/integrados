@@ -11,7 +11,7 @@ class Database:
     async def connect(self):
         self.pool = await asyncpg.create_pool(self.dsn, min_size=1, max_size=5)
         async with self.pool.acquire() as conn:
-            await conn.execute("CREATE TABLE IF NOT EXISTS rebuilds (id TEXT, user_id TEXT, status TEXT, received_at TIMESTAMP DEFAULT NOW(), dimensions INTEGER, payload JSONB, file_path TEXT, started_at TIMESTAMP, finished_at TIMESTAMP, iterations INTEGER, PRIMARY KEY (id))")
+            await conn.execute("CREATE TABLE IF NOT EXISTS rebuilds (id TEXT, user_id TEXT, status TEXT, received_at TIMESTAMP DEFAULT NOW(), dimensions INTEGER, payload JSONB, file_path TEXT, started_at TIMESTAMP, finished_at TIMESTAMP, iterations INTEGER)")
 
     async def insert_rebuild(self, id: str, user_id: str, status: str, dimensions: int, payload: dict):
         async with self.pool.acquire() as conn:

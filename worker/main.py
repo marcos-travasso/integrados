@@ -9,9 +9,9 @@ from server.database import Database
 from worker.rebuild import algorithm
 
 QUEUE_NAME = "rebuilds"
-MIN_FREE_MEMORY_MB = 3000
+MIN_FREE_MEMORY_MB = 4000
 database = Database()
-
+sem = asyncio.Semaphore(5)
 
 def check_memory():
     mem = psutil.virtual_memory()
@@ -46,17 +46,18 @@ def process(message_body: str):
 
 
 async def handle_message(message: aio_pika.IncomingMessage):
-    while not check_memory():  # todo controlar qnt de paralelos
-        print("Waiting for memory...")
-        await asyncio.sleep(1)
+    async with sem:
+        while not check_memory():
+            print("Waiting for memory...")
+            await asyncio.sleep(1)
 
-    await asyncio.to_thread(process, message.body.decode())
+        await asyncio.to_thread(process, message.body.decode())
 
-    try:
-        await message.ack()
-        print("Message acknowledged.")
-    except aio_pika.exceptions.MessageProcessError:
-        print("Message was already acknowledged or processed.")
+        try:
+            await message.ack()
+            print("Message acknowledged.")
+        except aio_pika.exceptions.MessageProcessError:
+            print("Message was already acknowledged or processed.")
 
 
 async def consume():
