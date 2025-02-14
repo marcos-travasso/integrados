@@ -32,7 +32,12 @@ def send_signal(h, g, dimension):
         sleep(1)
         monitor_performance(response, data)
     print('=============')
-    print(get_rebuild(response.json()['id']))
+    result = {
+        **get_rebuild(response.json()['id']),
+        **data
+    }
+    del result['g']
+    data_user.append(result)
 
 def monitor_performance( response_rebuild, data_full):
     response = requests.get('http://localhost:8080/status')
@@ -123,7 +128,10 @@ def generate_pdf(data_user, output_pdf):
 
     for user in data_user:
         image_path = f"gatinho.jpg"  # Supondo que as imagens estejam nesse formato
+        if "file_path" in user:
+            image_path = user["file_path"]
 
+        img_width, img_height = 0, 0
         try:
             img = ImageReader(image_path)
             img_width, img_height = img.getSize()
@@ -145,12 +153,12 @@ def generate_pdf(data_user, output_pdf):
         # Adicionando os dados abaixo da imagem
         text_y_position = height - img_height - 70
         c.setFont("Helvetica", 12)
-        c.drawString(50, text_y_position, f"ID: {user['id']}")
-        c.drawString(50, text_y_position - 20, f"CPU Uso: {user['cpu_percent']}%")
-        c.drawString(50, text_y_position - 40, f"Memória Usada: {user['memory_used']} MB")
-        c.drawString(50, text_y_position - 60, f"Memória Total: {user['memory_total']} MB")
-        c.drawString(50, text_y_position - 80, f"Modelo: {user['model']}")
-        c.drawString(50, text_y_position - 100, f"Dimensões: {user['dimensions']}")
+        c.drawString(50, text_y_position, f"ID: {user.get('user', 0)}")
+        c.drawString(50, text_y_position - 20, f"CPU Uso: {user.get('cpu_percent', 0)}%")
+        c.drawString(50, text_y_position - 40, f"Memória Usada: {user.get('memory_used', 0)} MB")
+        c.drawString(50, text_y_position - 60, f"Memória Total: {user.get('memory_total', 0)} MB")
+        c.drawString(50, text_y_position - 80, f"Modelo: {user.get('model', '')}")
+        c.drawString(50, text_y_position - 100, f"Dimensões: {user.get('dimensions')}")
 
         # Nova página se houver mais imagens
         c.showPage()
@@ -163,7 +171,6 @@ output_pdf = "relatorio.pdf"
 
 
 for i in range(1):
-    # generate_pdf(data_user, output_pdf)
     data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
     files = {
@@ -190,4 +197,6 @@ for i in range(1):
     h, g, dimension = mapping[random_number]
     send_signal(h, data[g], dimension)
 
+print(data_user)
 
+generate_pdf(data_user, output_pdf)
