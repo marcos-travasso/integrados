@@ -61,7 +61,7 @@ async def get_status(request: Request):
     used_mb = (mem.total - mem.available) / (1024 * 1024)
 
     return web.json_response({
-        "cpu_percent": f"{psutil.cpu_percent()*100:.2f}",
+        "cpu_percent": f"{psutil.cpu_percent():.2f}",
         "memory_used": used_mb,
         "memory_total": total_mb
     })

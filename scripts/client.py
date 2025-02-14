@@ -40,7 +40,7 @@ def monitor_performance( response_rebuild, data_full):
         rebuild = response_rebuild.json()
         status = response.json()
         print(f"CPU use: {status['cpu_percent']}%")
-        print(f"Memory usage: {status['memory_used']} MB")
+        print(f"Memory usage: {status['memory_used']} MB ({(status['memory_used'] / status['memory_total']) * 100:.2f}%)")
         print(f"Total memory: {status['memory_total']} MB")
         data = {
             "id": rebuild['id'],
