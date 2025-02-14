@@ -14,6 +14,7 @@ import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def send_signal(h, g, dimension):
+    sleep(random.randint(1, 10))
     data_user = []
     rand_number = random.randint(1, 1000)
     user = f"user_{rand_number}"
