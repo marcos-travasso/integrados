@@ -5,11 +5,12 @@ from datetime import datetime
 import aio_pika
 import psutil
 
+from server.database import Database
 from worker.rebuild import algorithm
 
 QUEUE_NAME = "rebuilds"
 MIN_FREE_MEMORY_MB = 15000
-
+database = Database()
 
 def check_memory():
     available_mb = psutil.virtual_memory().available / (1024 * 1024)
@@ -21,11 +22,19 @@ def check_memory():
 def process(message_body: str):
     message_body = json.loads(message_body)
     payload = message_body["payload"]
-    print(f"Processing message: {message_body['id']} | model {payload['model']} | dimension {payload['dimension']}")
+    print(f"Processing message: {message_body['id']} | model {payload['model']} | dimension {payload['dimensions']}")
 
     started_at = datetime.now()
 
-    file_path = algorithm(payload["g"], payload["H"], payload["model"], message_body["id"], payload["dimension"])
+    database.update_rebuild(message_body["id"], "status", "running")
+    database.update_rebuild(message_body["id"], "started_at")
+
+    file_path, iterations = algorithm(payload["g"], payload["H"], payload["model"], message_body["id"], payload["dimensions"])
+
+    database.update_rebuild(message_body["id"], "finished_at")
+    database.update_rebuild(message_body["id"], "iterations", iterations)
+    database.update_rebuild(message_body["id"], "file_path", file_path)
+    database.update_rebuild(message_body["id"], "status", "finished")
 
     print(f"Message processed: {message_body['id']} in {datetime.now() - started_at} -> {file_path}")
 

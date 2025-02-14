@@ -13,7 +13,7 @@ def send_signal(h, g, dimension):
         'model': "cgnr" if random.random() < 0.5 else "cgne",
         'H': h,
         'g': g,
-        'dimension': dimension,
+        'dimensions': dimension,
     }
 
     response = requests.post('http://localhost:8080/rebuild', json=data)
@@ -37,7 +37,7 @@ def monitor_performance():
         print("Error getting server status.")
 
 
-for i in range(50):
+for i in range(1):
     data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
     files = {

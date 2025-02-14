@@ -26,7 +26,7 @@ async def create_rebuild(request: Request):
         "payload": data
     }
 
-    await database.insert_rebuild(id, "pending", received_at, data)
+    await database.insert_rebuild(id, data["user"], "pending", data["dimensions"], data)
 
     asyncio.create_task(rabbitmq.send_to_queue(message))
 
