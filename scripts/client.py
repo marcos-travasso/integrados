@@ -1,5 +1,6 @@
 import os
 import random
+from datetime import datetime
 from time import sleep
 
 from reportlab.lib.pagesizes import letter
@@ -7,6 +8,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import pandas as pd
 import requests
+
 
 data_user = []
 
@@ -110,6 +112,12 @@ def generate_pdf(data_user, output_pdf):
         c.drawString(50, text_y_position - 80, f"Modelo: {user.get('model', '')}")
         c.drawString(50, text_y_position - 100, f"Dimensões: {user.get('dimensions')}")
         c.drawString(50, text_y_position - 120, f"Iterações: {user.get('iterations', 0)}")
+        c.drawString(50, text_y_position - 140, f"Inicio: {user.get('started_at', '')}")
+        c.drawString(50, text_y_position - 160, f"Fim: {user.get('finished_at', '')}")
+        duration = "Não finalizou ainda"
+        if user.get('finished_at') and user.get('started_at'):
+            duration = datetime.fromisoformat(user.get('finished_at')) - datetime.fromisoformat(user.get('started_at'))
+        c.drawString(50, text_y_position - 180, f"Duração: {duration}")
 
         # Nova página se houver mais imagens
         c.showPage()
@@ -121,7 +129,7 @@ def generate_pdf(data_user, output_pdf):
 output_pdf = f"relatorio_{random.randint(1, 100)}.pdf"
 
 
-for i in range(5):
+for i in range(2):
     data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
     files = {
