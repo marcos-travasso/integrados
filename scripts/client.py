@@ -121,7 +121,7 @@ def generate_pdf(data_user, output_pdf):
 output_pdf = "relatorio.pdf"
 
 
-for i in range(1):
+for i in range(5):
     data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
     files = {
