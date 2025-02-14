@@ -56,10 +56,14 @@ async def get_rebuild(request: Request):
 
 
 async def get_status(request: Request):
+    mem = psutil.virtual_memory()
+    total_mb = mem.total / (1024 * 1024)
+    used_mb = (mem.total - mem.available) / (1024 * 1024)
+
     return web.json_response({
         "cpu_percent": f"{psutil.cpu_percent()*100:.2f}",
-        "memory_used": psutil.virtual_memory().available / (1024 * 1024),
-        "memory_total": psutil.virtual_memory().total / (1024 * 1024)
+        "memory_used": used_mb,
+        "memory_total": total_mb
     })
 
 

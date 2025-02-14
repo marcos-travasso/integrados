@@ -9,13 +9,19 @@ from server.database import Database
 from worker.rebuild import algorithm
 
 QUEUE_NAME = "rebuilds"
-MIN_FREE_MEMORY_MB = 15000
+MIN_FREE_MEMORY_MB = 3000
 database = Database()
 
+
 def check_memory():
-    available_mb = psutil.virtual_memory().available / (1024 * 1024)
-    total_mb = psutil.virtual_memory().total / (1024 * 1024)
-    print(f"Free memory: {available_mb} MB. Total memory: {total_mb} MB ({(available_mb / total_mb) * 100:.2f}%)")
+    mem = psutil.virtual_memory()
+    available_mb = mem.available / (1024 * 1024)
+    total_mb = mem.total / (1024 * 1024)
+    used_mb = (mem.total - mem.available) / (1024 * 1024)
+
+    print(f"Used memory: {used_mb:.2f} MB | Free memory: {available_mb:.2f} MB | Total memory: {total_mb:.2f} MB "
+          f"({(available_mb / total_mb) * 100:.2f}% free)")
+
     return available_mb > MIN_FREE_MEMORY_MB
 
 
