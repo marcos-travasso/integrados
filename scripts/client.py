@@ -8,11 +8,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import pandas as pd
 import requests
-
-
-data_user = []
+import os
+import random
+import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def send_signal(h, g, dimension):
+    data_user = []
     rand_number = random.randint(1, 100)
     user = f"user_{rand_number}"
 
@@ -46,6 +48,7 @@ def send_signal(h, g, dimension):
     }
     del result['g']
     data_user.append(result)
+    return data_user
 
 def monitor_performance( response_rebuild, data_full):
     response = requests.get('http://localhost:8080/status')
@@ -110,7 +113,7 @@ def generate_pdf(data_user, output_pdf):
         c.drawString(50, text_y_position - 40, f"Memória Usada: {user.get('memory_used', 0)} MB")
         c.drawString(50, text_y_position - 60, f"Memória Total: {user.get('memory_total', 0)} MB")
         c.drawString(50, text_y_position - 80, f"Modelo: {user.get('model', '')}")
-        c.drawString(50, text_y_position - 100, f"Dimensões: {user.get('dimensions')}")
+        c.drawString(50, text_y_position - 100, f"Dimensões: {user.get('dimensions')} x {user.get('dimensions')}")
         c.drawString(50, text_y_position - 120, f"Iterações: {user.get('iterations', 0)}")
         c.drawString(50, text_y_position - 140, f"Inicio: {user.get('started_at', '')}")
         c.drawString(50, text_y_position - 160, f"Fim: {user.get('finished_at', '')}")
@@ -126,10 +129,7 @@ def generate_pdf(data_user, output_pdf):
     print(f"PDF '{output_pdf}' criado com sucesso!")
 
 
-output_pdf = f"relatorio_{random.randint(1, 100)}.pdf"
-
-
-for i in range(2):
+def process_signal():
     data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
     files = {
@@ -152,10 +152,20 @@ for i in range(2):
     }
 
     random_number = random.randint(1, 4)
-
     h, g, dimension = mapping[random_number]
-    send_signal(h, data[g], dimension)
 
-print(data_user)
+    data_user = send_signal(h, data[g], dimension)
 
-generate_pdf(data_user, output_pdf)
+    output_pdf = f"relatorio_user_{data_user[0]['user']}.pdf"
+    generate_pdf(data_user, output_pdf)
+
+
+def main():
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(process_signal) for _ in range(2)]
+        for future in as_completed(futures):
+            future.result()
+
+
+if __name__ == "__main__":
+    main()
