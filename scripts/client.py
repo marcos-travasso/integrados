@@ -1,5 +1,6 @@
 import os
 import random
+from time import sleep
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -7,11 +8,7 @@ from reportlab.lib.utils import ImageReader
 import pandas as pd
 import requests
 
-# data_user = []
-data_user = [
-    {"id": 1, "cpu_percent": 50, "memory_used": 1024, "memory_total": 8192, "model": "XYZ", "dimensions": "1920x1080"},
-    {"id": 2, "cpu_percent": 75, "memory_used": 2048, "memory_total": 8192, "model": "ABC", "dimensions": "1280x720"},
-]
+data_user = []
 
 def send_signal(h, g, dimension):
     rand_number = random.randint(1, 100)
@@ -26,27 +23,27 @@ def send_signal(h, g, dimension):
     }
 
     response = requests.post('http://localhost:8080/rebuild', json=data)
-    monitor_performance(rand_number, response, data)
-    print(response)
-    if response.status_code == 200:
-        result = response.json()
-        print(result)
-    else:
+    if response.status_code != 200:
         print("Error processing image.")
 
+    monitor_performance(response, data)
+    while get_rebuild(response.json()['id'])['status'] != "finished":
+        print('=============')
+        sleep(1)
+        monitor_performance(response, data)
+    print('=============')
+    print(get_rebuild(response.json()['id']))
 
-def monitor_performance(rand_number, response_rebuild, data):
+def monitor_performance( response_rebuild, data_full):
     response = requests.get('http://localhost:8080/status')
-    print(response)
     if response.status_code == 200:
         rebuild = response_rebuild.json()
         status = response.json()
-        data_full = data.json()
         print(f"CPU use: {status['cpu_percent']}%")
         print(f"Memory usage: {status['memory_used']} MB")
         print(f"Total memory: {status['memory_total']} MB")
         data = {
-            "id": rand_number,
+            "id": rebuild['id'],
             "cpu_percent": status['cpu_percent'],
             "memory_used": status['memory_used'],
             "memory_total": status['memory_total'],
@@ -56,6 +53,10 @@ def monitor_performance(rand_number, response_rebuild, data):
         data_user.append(data)
     else:
         print("Error getting server status.")
+
+def get_rebuild(image_id):
+    response = requests.get(f'http://localhost:8080/rebuild/{image_id}')
+    return response.json()
 
 # def generate_pdf(image_paths, output_pdf):
 #     """Gera um PDF com várias imagens e seus dados correspondentes"""
@@ -162,31 +163,31 @@ output_pdf = "relatorio.pdf"
 
 
 for i in range(1):
-    generate_pdf(data_user, output_pdf)
-    # data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
+    # generate_pdf(data_user, output_pdf)
+    data_path = os.path.join(os.path.dirname(__file__), "../worker/Data")
 
-    # files = {
-    #     "G_1": "G-1.csv",
-    #     "G_2": "G-2.csv",
-    #     "g_1": "g-30x30-1.csv",
-    #     "g_2": "g-30x30-2.csv",
-    # }
+    files = {
+        "G_1": "G-1.csv",
+        "G_2": "G-2.csv",
+        "g_1": "g-30x30-1.csv",
+        "g_2": "g-30x30-2.csv",
+    }
 
-    # data = {
-    #     key: [l[0] for l in pd.read_csv(os.path.join(data_path, file), header=None, delimiter=',').values.tolist()]
-    #     for key, file in files.items()
-    # }
+    data = {
+        key: [l[0] for l in pd.read_csv(os.path.join(data_path, file), header=None, delimiter=',').values.tolist()]
+        for key, file in files.items()
+    }
 
-    # mapping = {
-    #     1: ("H-1", "G_1", 60),
-    #     2: ("H-1", "G_2", 60),
-    #     3: ("H-2", "g_1", 30),
-    #     4: ("H-2", "g_2", 30),
-    # }
+    mapping = {
+        1: ("H-1", "G_1", 60),
+        2: ("H-1", "G_2", 60),
+        3: ("H-2", "g_1", 30),
+        4: ("H-2", "g_2", 30),
+    }
 
-    # random_number = random.randint(1, 4)
+    random_number = random.randint(1, 4)
 
-    # h, g, dimension = mapping[random_number]
-    # send_signal(h, data[g], dimension)
+    h, g, dimension = mapping[random_number]
+    send_signal(h, data[g], dimension)
 
 
