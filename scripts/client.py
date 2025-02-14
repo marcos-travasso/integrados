@@ -118,7 +118,7 @@ def generate_pdf(data_user, output_pdf):
     print(f"PDF '{output_pdf}' criado com sucesso!")
 
 
-output_pdf = "relatorio.pdf"
+output_pdf = f"relatorio_{random.randint(1, 100)}.pdf"
 
 
 for i in range(5):
