@@ -109,6 +109,7 @@ def generate_pdf(data_user, output_pdf):
         c.drawString(50, text_y_position - 60, f"Memória Total: {user.get('memory_total', 0)} MB")
         c.drawString(50, text_y_position - 80, f"Modelo: {user.get('model', '')}")
         c.drawString(50, text_y_position - 100, f"Dimensões: {user.get('dimensions')}")
+        c.drawString(50, text_y_position - 120, f"Iterações: {user.get('iterations', 0)}")
 
         # Nova página se houver mais imagens
         c.showPage()
