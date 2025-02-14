@@ -38,7 +38,19 @@ async def get_rebuild(request: Request):
     row = await database.get_rebuild(rebuild_id)
 
     if row:
-        return web.json_response(data={"id": row["id"], "status": row["status"], "received_at": row["received_at"], "payload": json.loads(row["payload"])})
+        p = json.loads(row["payload"])
+        del p["g"]
+        return web.json_response(data={
+            "id": row["id"],
+            "status": row["status"],
+            "dimensions": row["dimensions"],
+            "received_at": row["received_at"].isoformat() if row["received_at"] else None,
+            "payload": p,
+            "file_path": row["file_path"],
+            "started_at": row["started_at"].isoformat() if row["started_at"] else None,
+            "finished_at": row["finished_at"].isoformat() if row["finished_at"] else None,
+            "iterations": row["iterations"]
+        })
     else:
         return web.json_response(data={"error": "Not found"}, status=404)
 
