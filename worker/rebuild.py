@@ -23,10 +23,10 @@ def algorithm(g: list[float], H_dir: str, model: str, image_id: str, dimension: 
     image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX)
     image = np.uint8(image)
 
-    output_path = os.path.join(os.path.dirname(__file__), f"../worker/Outputs/output_{image_id}.png")
+    output_path = os.path.dirname(__file__) + f"/Outputs/output_{image_id}.png"
     cv2.imwrite(output_path, image)
 
-    return f'output_{image_id}.png', it
+    return output_path, it
 
 
 def cgnr(g: np.ndarray, H: np.ndarray) -> (np.ndarray, int):

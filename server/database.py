@@ -22,7 +22,7 @@ class Database:
 
     async def get_rebuild(self, id: str):
         async with self.pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT id, status, received_at, payload FROM rebuilds WHERE id = $1", id)
+            row = await conn.fetchrow("SELECT id, status, received_at, dimensions, file_path, started_at, finished_at, iterations, payload FROM rebuilds WHERE id = $1", id)
             return row
 
     def update_rebuild(self, id: str, column: str, value = "NOW()"):
